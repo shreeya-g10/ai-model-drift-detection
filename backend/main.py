@@ -1,3 +1,10 @@
+import os
+
+# Ensure log folder + file exist
+os.makedirs("log", exist_ok=True)
+if not os.path.exists("log/log.json"):
+    open("log/log.json", "w").close()
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pickle
