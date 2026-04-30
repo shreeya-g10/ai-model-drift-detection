@@ -1,0 +1,37 @@
+{
+  "title": "ML API Monitoring",
+  "panels": [
+    {
+      "title": "Requests Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "req/s"
+        }
+      ]
+    },
+    {
+      "title": "Prediction Distribution",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (prediction) (prediction_count_total)",
+          "legendFormat": "{{prediction}}"
+        }
+      ]
+    },
+    {
+      "title": "API Latency (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 latency"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}

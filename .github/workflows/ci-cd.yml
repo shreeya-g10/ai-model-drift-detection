@@ -1,0 +1,46 @@
+name: CI-CD
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Train model artifact
+        run: python model/train.py
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Build Docker image
+        run: docker build -t ml-app:ci .
+
+      - name: Login to DockerHub
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          docker tag ml-app:ci ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest
