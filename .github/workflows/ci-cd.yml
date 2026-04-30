@@ -1,3 +1,4 @@
+#trigger run
 name: CI-CD
 
 on:
@@ -5,6 +6,7 @@ on:
     branches:
       - main
       - "feature/**"
+      - "vaidehi-*"
   pull_request:
 
 jobs:
@@ -29,8 +31,11 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      - name: Test Backend Import
+        run: python -c "from backend.main import app"
+
       - name: Build Docker image
-        run: docker build -t ml-app:ci .
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest .
 
       - name: Login to DockerHub
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -41,6 +46,4 @@ jobs:
 
       - name: Push Docker image
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          docker tag ml-app:ci ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/ml-app:latest
