@@ -28,14 +28,16 @@ class PredictRequest(BaseModel):
     text: str = Field(..., min_length=1, description="Input text for spam prediction")
 
 
-def get_connection():
-    conn = sqlite3.connect(DB_PATH)
+def _create_connection():
+    """Open SQLite without going through get_connection() (avoids recursion with init_db)."""
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH.resolve()), timeout=30.0)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    with get_connection() as conn:
+    with _create_connection() as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS prediction_logs (
@@ -48,6 +50,12 @@ def init_db():
             """
         )
         conn.commit()
+
+
+def get_connection():
+    # Ensure schema exists on every use so logging works even if ASGI startup did not run.
+    init_db()
+    return _create_connection()
 
 
 def load_model():
