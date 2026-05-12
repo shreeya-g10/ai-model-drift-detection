@@ -109,6 +109,30 @@ If you still see `ModuleNotFoundError: No module named 'fastapi'`, check `which 
   - `docker compose -f docker-compose.monitoring.yml up -d`
 - API exposes Prometheus metrics at `GET /metrics`.
 
+### Grafana datasource (`http://prometheus:9090` fails)
+
+That URL only works when **Grafana runs inside Docker** and shares a **Compose network** with the **Prometheus** service (name `prometheus`). It will not open in your normal browser.
+
+1. Recreate the stack so both containers share the compose network:
+
+   ```bash
+   cd monitoring
+   docker compose -f docker-compose.monitoring.yml down
+   docker compose -f docker-compose.monitoring.yml up -d
+   ```
+
+2. Prove Grafana can reach Prometheus (should print `Prometheus Server is Healthy.`):
+
+   ```bash
+   docker exec ml-grafana curl -sf http://prometheus:9090/-/healthy
+   ```
+
+   If `curl` is missing in the container, try: `docker exec ml-grafana wget -qO- http://prometheus:9090/-/healthy`
+
+   If this fails, Grafana was started outside this compose file or uses another network — use **`http://host.docker.internal:9090`** instead (Prometheus on the Mac), or put both services in this compose file only.
+
+3. In Grafana → Connections → Data sources → Prometheus, set URL **`http://prometheus:9090`**, Save & test.
+
 ## Drift Detection
 
 - Script: `drift/check_drift.py`
