@@ -1,5 +1,6 @@
 data/imdb.csv
 log/log.json
+model/data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
